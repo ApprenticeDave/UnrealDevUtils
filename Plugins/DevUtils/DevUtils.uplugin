@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "DevUtils",
+	"Description": "A collection of editor utils to improve development workflow.",
+	"Category": "Development Utilities",
+	"CreatedBy": "Dave Russell",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "DevUtils",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
