@@ -26,6 +26,7 @@ public class DevUtils : ModuleRules
 			new string[]
 			{
 				"Core",
+				"BlueprintMarkdown",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -47,6 +48,7 @@ public class DevUtils : ModuleRules
 			new string[]
 			{
 				// ... add any modules that your module loads dynamically here ...
+				
 			}
 			);
 	}
