@@ -113,9 +113,10 @@ https://unrealist.org/custom-blueprint-nodes/
 https://docs.unrealengine.com/5.3/en-US/ProgrammingAndScripting/Plugins/CreatingPlugins/
 https://unrealist.org/custom-blueprint-nodes/
 https://medium.com/@lemapp09/learning-unreal-creating-custom-blueprint-nodes-in-c-3ddb54eaf254
-
+https://github.com/YawLighthouse/UMG-Slate-Compendium?tab=readme-ov-file
 
 ### GitHub Repos:
+* https://github.com/stkrwork/CustomizedBPNodes
 * https://medium.com/@lemapp09/learning-unreal-creating-custom-blueprint-nodes-in-c-3ddb54eaf254
 * https://github.com/BrUnOXaVIeRLeiTE/Unreal-Magic-Nodes
 * https://github.com/Drakynfly/HeartGraph
