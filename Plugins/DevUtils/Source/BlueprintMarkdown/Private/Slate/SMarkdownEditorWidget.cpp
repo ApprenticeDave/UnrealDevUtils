@@ -14,6 +14,7 @@ void SMarkdownEditorWidget::Construct(const FArguments& InArgs, UK2Node* InNode)
 								.AllowMultiLine(true)
 								.AutoWrapText(true)
 								.VScrollBar(SNew(SScrollBar))
+								.OnTextChanged(this, &SMarkdownEditorWidget::OnMarkdownTextChanged)
 								;
 	MarkdownEditorTextBox->SetText(BlueprintNode->MarkdownText);
 	MarkdownPreviewTextBlock = SNew(SRichTextBlock)
@@ -39,7 +40,7 @@ void SMarkdownEditorWidget::Construct(const FArguments& InArgs, UK2Node* InNode)
 		[
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
-				.AutoHeight()
+				.FillHeight(1.0f)
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
@@ -62,7 +63,6 @@ void SMarkdownEditorWidget::Construct(const FArguments& InArgs, UK2Node* InNode)
 						[
 							SNew(STextBlock)
 								.Text(FText::FromString("Edit"))
-								
 						]
 					+ SHorizontalBox::Slot()
 						.AutoWidth()
@@ -79,7 +79,7 @@ void SMarkdownEditorWidget::Construct(const FArguments& InArgs, UK2Node* InNode)
 	UpdateGraphNode();
 }
 
-void SMarkdownEditorWidget::OnEditModeChanged(ECheckBoxState CheckBoxState)
+void SMarkdownEditorWidget::OnEditModeChanged(ECheckBoxState CheckBoxState) const
 {
 	auto* BlueprintNode = Cast<UK2Node_BlueprintMarkdownNode>(GraphNode);
 	if (!BlueprintNode)
@@ -98,7 +98,8 @@ void SMarkdownEditorWidget::OnEditModeChanged(ECheckBoxState CheckBoxState)
 		MarkdownEditorTextBox->SetVisibility(EVisibility::Collapsed);
 		break;
 	case ECheckBoxState::Undetermined:
-		// Handle undetermined state (if your checkbox supports three states)
+		// This is not a supported state for a checkbox, but we handle it just in case
+		UE_LOG(LogTemp, Warning, TEXT("The check box state is an unexpected value!"));
 		break;
 	}
 
@@ -108,39 +109,41 @@ void SMarkdownEditorWidget::UpdateResizeState(const FGeometry& MyGeometry, const
 {
 	if (!bIsResizingMarkdownNode)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Check if over resize handle"))
 		FVector2D LocalMousePosition = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
 		FVector2D LocalSize = MyGeometry.GetLocalSize();
 		bIsHorizontalResize = false;
 		bIsVerticalResize = false;
 		bIsHorizontalResize = (LocalMousePosition.X <= ResizeAreaSize || LocalMousePosition.X >= (LocalSize.X - ResizeAreaSize));
 		bIsVerticalResize = (LocalMousePosition.Y <= ResizeAreaSize || LocalMousePosition.Y >= (LocalSize.Y - ResizeAreaSize));
+		if (bIsHorizontalResize || bIsVerticalResize)
+		{
+			UE_LOG(LogTemp, Log, TEXT("RESIZE AREA DETECTED: %s"), *LocalMousePosition.ToString());
+		}
 	}
 }
 
-void SMarkdownEditorWidget::OnMarkdownTextChanged(const FText& Text)
+	
+void SMarkdownEditorWidget::OnMarkdownTextChanged(const FText& Text) const
 {
 	auto* BlueprintNode = Cast<UK2Node_BlueprintMarkdownNode>(GraphNode);
 
 	BlueprintNode->MarkdownText = Text;
-
-	MarkdownPreviewTextBlock->SetText(Text);
-}
-
-void SMarkdownEditorWidget::OnMarkdownTextCommitted(const FText& Text, ETextCommit::Type Arg)
-{
+	
+	FText richtext = FText::FromString(BlueprintNode->MarkdownText.ToString());
+	MarkdownPreviewTextBlock->SetText(richtext);
 }
 
 TSharedRef<SWidget> SMarkdownEditorWidget::CreateNodeContentArea()
 {
-	auto* BlueprintNode = Cast<UK2Node_BlueprintMarkdownNode>(GraphNode);
+	//auto* BlueprintNode = Cast<UK2Node_BlueprintMarkdownNode>(GraphNode);
 	return NodeContainer.ToSharedRef();
 }
 /*
-*- `ResizeSouthEast` - Diagonal resize (↘)
-- `ResizeSouthWest` - Diagonal resize (↙)
-- `ResizeLeftRight` - Horizontal resize (↔)
-- `ResizeUpDown` - Vertical resize (↕)
+ * Show the appropriate cursor based on the cursor position on the node. 
+ * - `ResizeSouthEast` - Diagonal resize (↘)
+ * - `ResizeSouthWest` - Diagonal resize (↙)
+ * - `ResizeLeftRight` - Horizontal resize (↔)
+ * - `ResizeUpDown` - Vertical resize (↕)
  */
 FCursorReply SMarkdownEditorWidget::OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const
 {
@@ -203,19 +206,30 @@ FReply SMarkdownEditorWidget::OnMouseMove(const FGeometry& MyGeometry, const FPo
 	
 	if (bIsResizingMarkdownNode)
 	{
+		const FVector2f ScreenMousePosition = MouseEvent.GetScreenSpacePosition();
 		
-		const FVector2D MouseDelta = MyGeometry.AbsoluteToLocal(
-			MouseEvent.GetScreenSpacePosition()
-		) - ResizeStartPosition;
-		FVector2D NewSize = MyGeometry.GetLocalSize() + MouseDelta;
+		const FVector2f LocalMouseDelta = MyGeometry.AbsoluteToLocal(
+			ScreenMousePosition
+		) - NodeLocalResizeStartPosition;
+
+		FVector2f NewSize = OriginalNodeSize + LocalMouseDelta;
+		if (bIsHorizontalResize)
+		{
+			NewSize.X = FMath::Clamp(NewSize.X, 600.0f, 2000.0f);
+			NodeContainer->SetWidthOverride(NewSize.X);
+		}
+		
+		if (bIsVerticalResize)
+		{
+			NewSize.Y = FMath::Clamp(NewSize.Y, 300.0f, 1500.0f);
+			NodeContainer->SetWidthOverride(NewSize.X);
+		}
+		
 		UE_LOG(LogTemp, Log, TEXT("RESIZE TO: %s"), *NewSize.ToString());
-
-		NewSize.X = FMath::Clamp(NewSize.X, 600.0f, 2000.0f);
-		NewSize.Y = FMath::Clamp(NewSize.Y, 300.0f, 1500.0f);
+	
 		
-		NodeContainer->SetWidthOverride(NewSize.X);
 		NodeContainer->SetHeightOverride(NewSize.Y);
-
+		
 		return FReply::Handled();
 	}
 	
@@ -226,11 +240,11 @@ FReply SMarkdownEditorWidget::OnMouseButtonDown(const FGeometry& MyGeometry, con
 {
 	if (bIsHorizontalResize || bIsVerticalResize)
 	{
-		UE_LOG(LogTemp, Log, TEXT("BEGIN RESIZE"))
+		UE_LOG(LogTemp, Log, TEXT("BEGIN RESIZE"));
 		bIsResizingMarkdownNode = true;
-		ResizeStartPosition = MyGeometry.AbsoluteToLocal(
+		OriginalNodeSize = MyGeometry.GetLocalSize();
+		NodeLocalResizeStartPosition = MyGeometry.AbsoluteToLocal(
 MouseEvent.GetScreenSpacePosition());
-
 		return FReply::Handled();
 	}
 	
@@ -239,15 +253,10 @@ MouseEvent.GetScreenSpacePosition());
 
 FReply SMarkdownEditorWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	if (bIsResizingMarkdownNode)
-	{
-		UE_LOG(LogTemp, Log, TEXT("END RESIZE"))
-		bIsResizingMarkdownNode = false;
-		bIsHorizontalResize = false;
-		bIsVerticalResize = false;
-
-		return FReply::Handled();
-	}
+	UE_LOG(LogTemp, Log, TEXT("END RESIZE"));
+	bIsResizingMarkdownNode = false;
+	bIsHorizontalResize = false;
+	bIsVerticalResize = false;
 	
 	return SGraphNodeK2Base::OnMouseButtonUp(MyGeometry, MouseEvent);
 }

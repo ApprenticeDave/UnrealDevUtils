@@ -4,6 +4,7 @@
 #include "Slate/SMarkdownEditorWidget.h"
 
 #define LOCTEXT_NAMESPACE "DevUtils"
+
 void UK2Node_BlueprintMarkdownNode::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
 	UClass* ActionKey = GetClass();
@@ -18,7 +19,7 @@ void UK2Node_BlueprintMarkdownNode::GetMenuActions(FBlueprintActionDatabaseRegis
 
 FText UK2Node_BlueprintMarkdownNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return Super::GetNodeTitle(TitleType);
+	return LOCTEXT("BlueprintMarkdownNode_Title", "Documentation");
 }
 
 FText UK2Node_BlueprintMarkdownNode::GetMenuCategory() const

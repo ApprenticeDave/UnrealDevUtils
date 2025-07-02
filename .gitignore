@@ -42,6 +42,9 @@
 *.VC.opendb
 .vsconfig
 
+# Fetched 3rd party libraries - all 3rd party libraries should be fetched by the engine and built as part of the build process
+ThirdParty/**
+
 # Precompiled Assets
 SourceArt/**/*.png
 SourceArt/**/*.tga
@@ -73,3 +76,4 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+/Plugins/DevUtils/ThirdParty/cmark/
