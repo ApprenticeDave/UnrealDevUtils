@@ -128,9 +128,13 @@ void SMarkdownEditorWidget::OnMarkdownTextChanged(const FText& Text) const
 	auto* BlueprintNode = Cast<UK2Node_BlueprintMarkdownNode>(GraphNode);
 
 	BlueprintNode->MarkdownText = Text;
-	
-	FText richtext = FText::FromString(BlueprintNode->MarkdownText.ToString());
-	MarkdownPreviewTextBlock->SetText(richtext);
+
+	const char* markdown = TCHAR_TO_UTF8(*Text.ToString());
+	char* html = cmark_markdown_to_html(markdown, strlen(markdown), CMARK_OPT_DEFAULT);
+	FString HtmlString = UTF8_TO_TCHAR(html);
+	free(html);
+
+	MarkdownPreviewTextBlock->SetText(FText::FromString(HtmlString));
 }
 
 TSharedRef<SWidget> SMarkdownEditorWidget::CreateNodeContentArea()

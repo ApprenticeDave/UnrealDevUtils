@@ -23,36 +23,57 @@ public class BlueprintMarkdown : ModuleRules
         get { return Path.Combine(ThirdPartyPath, "cmark"); }
     }
 
-    private bool DownloadCmark()
+    private bool DownloadGitDependency(string dependencyName, string gitUrl)
     {
+        string dependencyPath = Path.Combine(ModuleDirectory, "..", "..", "ThirdParty", dependencyName);
         try
         {
-            if (!Directory.Exists(CMarkPath))
+            if (!Directory.Exists(dependencyPath))
             {
-                Directory.CreateDirectory(CMarkPath);
+                Directory.CreateDirectory(dependencyPath);
             }
 
-            // Clone cmark if it doesn't exist
-            if (!File.Exists(Path.Combine(CMarkPath, "CMakeLists.txt")))
+            // Clone dependency if it doesn't exist
+            if (!File.Exists(Path.Combine(dependencyPath, ".github")))
             {
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = "clone https://github.com/commonmark/cmark.git \"" + CMarkPath + "\"",
+                    Arguments = "clone " + gitUrl + " \"" + dependencyPath + "\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
-                }).WaitForExit();
+                })
+                ?.WaitForExit();
+                Console.WriteLine("Downloaded " + dependencyName + " from " + gitUrl);
+                
+            }else{
+                // If the directory already exists, we can update it
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "pull",
+                    WorkingDirectory = dependencyPath,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                })
+                ?.WaitForExit();
+                Console.WriteLine("Updated " + dependencyName + " from " + gitUrl);
             }
-            Console.WriteLine("Downloaded cmark");
+            
             return true;
         }
         catch (Exception e)
         {
-            Console.WriteLine("Failed to download cmark: " + e.Message);
+            Console.WriteLine("Failed to download "+ dependencyName + " from "+ gitUrl+": " + e.Message);
             return false;
         }
 
+    }
+    private bool DownloadCmark()
+    {
+        return DownloadGitDependency("Cmark", "https://github.com/commonmark/cmark.git");
     }
 
 
@@ -94,7 +115,8 @@ public class BlueprintMarkdown : ModuleRules
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true
-            }).WaitForExit();
+            })
+            ?.WaitForExit();
 
             // Build using CMake
             Process.Start(new ProcessStartInfo
@@ -105,7 +127,8 @@ public class BlueprintMarkdown : ModuleRules
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true
-            }).WaitForExit();
+            })
+            ?.WaitForExit();
 
             Console.WriteLine("Built cmark successfully");
             return true;

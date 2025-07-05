@@ -69,6 +69,63 @@ A plugin can contain one or more modules, each module is a self-contained unit o
 
 Modules are useful for organizing code and separating functionality. For example, you could have a module for the game logic, a module for the UI, and a module for the editor tools. This allows you to keep your code organized and makes it easier to maintain.
 
+
+# Third Party Dependencies
+For this project I needed to add a library to convert Markdown to RTF. To make this work in a clean way I focused on using libraries which were available on GitHub. 
+
+## How to fetch a library from GitHub
+To keep dependencies up todate as well as managed cleanly I created a `ThirdParty` directory in the root of the project. This is where I will keep all the third party libraries that I need to use in the project.
+
+In the blueprint module `[modulename].Build.cs` we can add all the necessary build pipeline items. The code below will fetch the library from GitHub and add it to the project.
+
+```csharp 
+private bool DownloadGitDependency(string depependencyName, string gitUrl)
+    {
+        string dependencypath = Path.Combine(ModuleDirectory, "..", "..", "ThirdParty", dependencyname);
+        try
+        {
+            if (!Directory.Exists(dependencypath))
+            {
+                Directory.CreateDirectory(dependencypath);
+            }s
+
+            // Clone dependency if it doesn't exist
+            if (!File.Exists(Path.Combine(dependencypath, ".github")))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "clone " + gitUrl + " \"" + dependencyPath + "\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }).WaitForExit();
+                Console.WriteLine("Downloaded " + dependencyName + " from " + gitUrl);
+            }else{
+                // If the directory already exists, we can update it
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "pull",
+                    WorkingDirectory = dependencypath,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }).WaitForExit();
+                Console.WriteLine("Updated " + dependencyName + " from " + gitUrl);
+            }
+            
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Failed to download "+ dependencyName + " from "+ gitUrl+": " + e.Message);
+            return false;
+        }
+
+    }
+```
+
 # Appendix
 
 ## Other Useful Random Stuff
