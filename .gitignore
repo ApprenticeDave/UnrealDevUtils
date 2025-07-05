@@ -77,3 +77,6 @@ Plugins/**/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 /Plugins/DevUtils/ThirdParty/cmark/
+
+# Idea
+.idea

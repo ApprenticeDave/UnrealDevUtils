@@ -9,3 +9,4 @@ This Blueprint allows for a creation of a node inside the Graph Editor that can 
 
 ## Installation
 
+Once this is available in the marketplace, you can install it by following these steps:
